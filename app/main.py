@@ -48,6 +48,21 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def read_root():
+    return {
+        "status": "online",
+        "service": "Reading Nova Backend API",
+        "version": "1.0.1",
+        "docs": "/docs"
+    }
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 
 
 app.include_router(auth_router)
