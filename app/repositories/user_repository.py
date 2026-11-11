@@ -57,22 +57,6 @@ def link_google_account(db: Session, user_id: int, google_id: str):
     return user
 
 
-def get_user_by_github_id(db: Session, github_id: str):
-    return db.query(User).filter(User.github_id == github_id).first()
-
-
-def link_github_account(db: Session, user_id: int, github_id: str):
-    user = get_user_by_id(db, user_id)
-    if not user:
-        return None
-
-    user.github_id = github_id
-    user.is_verified = True
-    db.commit()
-    db.refresh(user)
-    return user
-
-
 def get_users_paginated(
     db: Session,
     search: str | None = None,

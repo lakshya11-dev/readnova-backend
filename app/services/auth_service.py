@@ -13,8 +13,6 @@ from app.services.google_auth_service import verify_google_token
 from app.repositories.user_repository import (
     get_user_by_google_id,
     link_google_account,
-    get_user_by_github_id,
-    link_github_account,
 )
 
 class InvalidCredentialsError(Exception):
@@ -197,53 +195,6 @@ def google_login(db: Session, token: str):
         )
 
     # Step 6: Generate our application's JWT
-    access_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "role": user.role
-        }
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
-
-
-def github_login(db: Session, github_id: str, email: str, name: str | None = None):
-    """
-    Social Login with GitHub / Secondary provider with automatic account merging (FRD Section 1.1)
-    """
-    if not email:
-        raise ValueError("GitHub account must have a verified public email address")
-
-    clean_email = email.strip().lower()
-    user_name = name or clean_email.split("@")[0]
-
-    # Step 1: Check by github_id
-    user = get_user_by_github_id(db, str(github_id))
-
-    if not user:
-        # Step 2: Check by email for Account Merging
-        existing_user = get_user_by_email(db, clean_email)
-        if existing_user:
-            user = link_github_account(db, existing_user.id, str(github_id))
-        else:
-            # Step 3: Create new customer
-            user_data = {
-                "name": user_name,
-                "email": clean_email,
-                "hashed_password": None,
-                "github_id": str(github_id),
-                "role": "customer",
-                "is_active": True,
-                "is_verified": True,
-            }
-            user = create_user(db, user_data)
-
-    if not user.is_active:
-        raise InactiveUserError("Your account is inactive")
-
     access_token = create_access_token(
         data={
             "sub": str(user.id),

@@ -8,8 +8,7 @@ from app.schemas.user_register import UserRegister
 from app.schemas.user_response import UserResponse
 from app.services.auth_service import verify_email
 from app.schemas.google_login import GoogleLoginRequest
-from app.schemas.social_login import SocialLoginRequest
-from app.services.auth_service import google_login, github_login
+from app.services.auth_service import google_login
 
 
 from app.services.auth_service import (
@@ -129,33 +128,6 @@ def google_login_endpoint(
             detail=str(error)
         )
 
-    except InactiveUserError as error:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(error)
-        )
-
-
-@router.post("/social", response_model=TokenResponse)
-def social_login_endpoint(
-    payload: SocialLoginRequest,
-    db: Session = Depends(get_db)
-):
-    """
-    Secondary Social Login (GitHub / Facebook) with automatic account merge by email (FRD Section 1.1)
-    """
-    try:
-        return github_login(
-            db=db,
-            github_id=payload.provider_id,
-            email=payload.email,
-            name=payload.name
-        )
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(error)
-        )
     except InactiveUserError as error:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
