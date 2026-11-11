@@ -7,11 +7,12 @@ from pydantic_settings import BaseSettings ,  SettingsConfigDict
 
 class Settings(BaseSettings):
 
-    MAIL_SERVER: str
-    MAIL_PORT: int
-    MAIL_USERNAME: str
-    MAIL_PASSWORD: str
-    MAIL_FROM: str
+    MAIL_SERVER: str = "smtp-relay.brevo.com"
+    MAIL_PORT: int = 587
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: str = ""
+    BREVO_API_KEY: str = ""
     BACKEND_BASE_URL: str
     GEOAPIFY_API_KEY: str
     STORJ_ACCESS_KEY: str
