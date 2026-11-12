@@ -21,6 +21,9 @@ class User(Base):
     # Google account identification
     google_id = Column(String(255), unique=True, nullable=True, index=True)
 
+    # Facebook account identification
+    facebook_id = Column(String(255), unique=True, nullable=True, index=True)
+
     # Account status
     role = Column(String(20), nullable=False, default="customer")
     is_active = Column(Boolean, default=True)

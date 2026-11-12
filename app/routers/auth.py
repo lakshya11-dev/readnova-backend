@@ -8,7 +8,8 @@ from app.schemas.user_register import UserRegister
 from app.schemas.user_response import UserResponse
 from app.services.auth_service import verify_email
 from app.schemas.google_login import GoogleLoginRequest
-from app.services.auth_service import google_login
+from app.schemas.facebook_login import FacebookLoginRequest
+from app.services.auth_service import google_login, facebook_login
 
 
 from app.services.auth_service import (
@@ -120,6 +121,28 @@ def google_login_endpoint(
 ):
     try:
         result = google_login(db, payload.id_token)
+        return result
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(error)
+        )
+
+    except InactiveUserError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(error)
+        )
+
+
+@router.post("/facebook", response_model=TokenResponse)
+def facebook_login_endpoint(
+    payload: FacebookLoginRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        result = facebook_login(db, payload.access_token)
         return result
 
     except ValueError as error:

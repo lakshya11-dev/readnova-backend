@@ -9,10 +9,13 @@ from app.repositories.user_repository import (get_user_by_email ,create_user)
 from app.core.security import create_email_verification_token
 from app.services.email_service import send_verification_email
 from app.services.google_auth_service import verify_google_token
+from app.services.facebook_auth_service import verify_facebook_token
 
 from app.repositories.user_repository import (
     get_user_by_google_id,
     link_google_account,
+    get_user_by_facebook_id,
+    link_facebook_account,
 )
 
 class InvalidCredentialsError(Exception):
@@ -141,6 +144,60 @@ def login_user(db: Session, user_data):
     }
 
 
+def facebook_login(db: Session, token: str):
+    """
+    Authenticates a user via Facebook Graph API.
+    Supports seamless account linking by email.
+    """
+    # Step 1: Verify Facebook Access Token and fetch user info
+    fb_user = verify_facebook_token(token)
+
+    facebook_id = fb_user["facebook_id"]
+    email = fb_user["email"]
+    name = fb_user.get("name") or "Facebook User"
+
+    # Step 2: Find user by Facebook ID
+    user = get_user_by_facebook_id(db, facebook_id)
+
+    if not user:
+        # Step 3: Check whether this email already belongs to an existing account
+        existing_user = get_user_by_email(db, email)
+
+        if existing_user:
+            # Merge: link Facebook account to existing user
+            user = link_facebook_account(db, existing_user.id, facebook_id)
+        else:
+            # Step 4: Create new customer
+            user_data = {
+                "name": name,
+                "email": email,
+                "hashed_password": None,
+                "facebook_id": facebook_id,
+                "role": "customer",
+                "is_active": True,
+                "is_verified": True
+            }
+            user = create_user(db, user_data)
+
+    # Step 5: Check whether account is active
+    if not user.is_active:
+        raise InactiveUserError("Your account is inactive")
+
+    # Step 6: Generate application JWT
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "role": user.role
+        }
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+
+
 def verify_email(db: Session, token: str):
     email = verify_email_verification_token(token)
 
@@ -206,5 +263,59 @@ def google_login(db: Session, token: str):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
+def facebook_login(db: Session, token: str):
+    """
+    Authenticates a user via Facebook Graph API.
+    Supports seamless account linking by email.
+    """
+    # Step 1: Verify Facebook Access Token and fetch user info
+    fb_user = verify_facebook_token(token)
+
+    facebook_id = fb_user["facebook_id"]
+    email = fb_user["email"]
+    name = fb_user.get("name") or "Facebook User"
+
+    # Step 2: Find user by Facebook ID
+    user = get_user_by_facebook_id(db, facebook_id)
+
+    if not user:
+        # Step 3: Check whether this email already belongs to an existing account
+        existing_user = get_user_by_email(db, email)
+
+        if existing_user:
+            # Merge: link Facebook account to existing user
+            user = link_facebook_account(db, existing_user.id, facebook_id)
+        else:
+            # Step 4: Create new customer
+            user_data = {
+                "name": name,
+                "email": email,
+                "hashed_password": None,
+                "facebook_id": facebook_id,
+                "role": "customer",
+                "is_active": True,
+                "is_verified": True
+            }
+            user = create_user(db, user_data)
+
+    # Step 5: Check whether account is active
+    if not user.is_active:
+        raise InactiveUserError("Your account is inactive")
+
+    # Step 6: Generate application JWT
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "role": user.role
+        }
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
 
 

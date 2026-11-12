@@ -57,6 +57,22 @@ def link_google_account(db: Session, user_id: int, google_id: str):
     return user
 
 
+def get_user_by_facebook_id(db: Session, facebook_id: str):
+    return db.query(User).filter(User.facebook_id == facebook_id).first()
+
+
+def link_facebook_account(db: Session, user_id: int, facebook_id: str):
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return None
+
+    user.facebook_id = facebook_id
+    user.is_verified = True
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def get_users_paginated(
     db: Session,
     search: str | None = None,

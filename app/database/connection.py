@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = ""
     DB_NAME: str = "student_management_db"
     GOOGLE_CLIENT_ID: str
+    FACEBOOK_APP_ID: str = "1768111120942269"
     # JWT configuration
     SECRET_KEY: str
     ALGORITHM: str
